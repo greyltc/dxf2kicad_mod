@@ -37,35 +37,37 @@ def	get_start_end_pts(entity):
 		return (entity.start,entity.end)
 	elif "ARC" == entity.dxftype:
 		start = ( entity.center[0] + entity.radius * math.cos(entity.startangle/180*math.pi), \
-			entity.center[1] + entity.radius * math.sin(entity.startangle/180*math.pi), 0)
+		          entity.center[1] + entity.radius * math.sin(entity.startangle/180*math.pi), 0)
 		end = ( entity.center[0] + entity.radius * math.cos(entity.endangle/180*math.pi), \
-			entity.center[1] + entity.radius * math.sin(entity.endangle/180*math.pi), 0)
+		        entity.center[1] + entity.radius * math.sin(entity.endangle/180*math.pi), 0)
 		if debug:
 			print  >>sys.stderr,"ARC ", start, end
 		return (start,end)
 	else:
 		print >>sys.stderr, "[Error]: Unexpceted dxftype ",  entity.dxftype 
-		
-		
-def print_points(ety,direction):
+
+
+def print_points(ety,direction,sub=0):
 
 	points = []
 	if 'LINE' == ety.dxftype:
 		points = [ety.start,ety.end]
+		if sub is 0:
+			points = [points[1]]
 	elif 'ARC' == ety.dxftype:
 		step = 1.0/ety.radius
 		angle = ety.startangle
-		
+
 		if debug:
 			print >>sys.stderr,"angle", ety.startangle, ety.endangle
-		
+
 		if (ety.startangle > ety.endangle):
 			ety.endangle += 360
 		while (1):
 			points.append( (ety.center[0] + ety.radius * math.cos(angle/180*math.pi), \
-			ety.center[1] + ety.radius * math.sin(angle/180*math.pi)))
+			                ety.center[1] + ety.radius * math.sin(angle/180*math.pi)))
 			angle +=  step
-			
+
 			if (angle > ety.endangle):
 				break
 	else:
@@ -73,10 +75,10 @@ def print_points(ety,direction):
 
 	if direction == -1:
 		points.reverse()
-	
+
 	for point in points:
 		print "(xy ", point[0]," ", -point[1],")" #in KiCad Y axis has opposite direction
-	
+
 
 def start_new_shape():
 	global current_shape,points,point_to_close,pts_next
@@ -85,12 +87,12 @@ def start_new_shape():
 		points = get_start_end_pts(current_shape)
 		point_to_close = points[0];
 		pts_next =points[1];
-		
+
 		if debug:
 			print >>sys.stderr,"starting point",point_to_close
 		print fp_poly_head
 		print_points(current_shape,1)
-	
+
 #dxf = dxfgrabber.readfile("test4-R2000-2002.dxf")
 dxf = dxfgrabber.readfile(sys.argv[1])
 
@@ -132,7 +134,7 @@ for layer in layers:
 				print >>sys.stderr, "pts_next is None"
 			break #stop 
 		pts = pts_next
-		
+
 		if debug:
 			print >>sys.stderr,"Searching entity which is connected with ", pts
 		#get_start_end_pts(current_shape)
@@ -160,29 +162,29 @@ for layer in layers:
 				if debug:
 					print >>sys.stderr,"Got the Point", x, y
 				break;
-				
-		
+
+
 		if matched_entity == None:
-			
+
 			if debug:
 				print >>sys.stderr,"No matching found, check if we could close the loop"
-				
+
 			if (math.fabs(point_to_close[0]-pts[0]) < distance_error) and \
-				(math.fabs(point_to_close[1]-pts[1]) < distance_error):
+			   (math.fabs(point_to_close[1]-pts[1]) < distance_error):
 				if debug:
 					print >>sys.stderr,"shape closed at", pts
-				print "(xy ", pts[0]," ", -pts[1],")" 
-				print fp_poly_end_1, layer, fp_poly_end_2
-						
+				#print "(xy ", pts[0]," ", -pts[1],")" 
+				print fp_poly_end_1, 'F.SilkS', fp_poly_end_2
+
 				#find next shape
 				start_new_shape()
-					
+
 				if debug :
 					print >>sys.stderr,"Not Processed Shape: ", len(not_processed_data)
 			else:
 				print >>sys.stderr, "[Error] unconnected Point:",pts ," on layer", layer
 				print >>sys.stderr, "        there may be overlapped lines or arcs or unclosed shape, please double check the dxf file"
-				
+
 				break;
 		else:
 			if debug:
@@ -191,8 +193,8 @@ for layer in layers:
 			if debug:
 				print >>sys.stderr, "removed from the set,", matched_entity
 			not_processed_data.remove(matched_entity) #remove from the set
-			
+
 			if debug :
 				print  >>sys.stderr,"Not Processed Shape: ", len(not_processed_data)
-				
+
 print body_end
