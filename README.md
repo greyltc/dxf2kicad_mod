@@ -7,6 +7,14 @@ it will read the dxf file and find lines and arcs (only supporting thes two type
 * each line must connect with another line or arc's begning or end point very precisely, as the algorithm searches the points location only. if it is overlapped, it will fail to find the connecting point but it will provide some hint to tell you where it is lost, you may check the location if it is overlapped or not connected well.
 * there must not be a line or arc on top another lines in the same layer due to the same reason above. sometimes, people draws two lines on the same location, and it very hard to find where. again the message in command line will provide some hints for you.
 
+## making holes in fp_polys
+* use a text editor to edit the resulting .kicad_mod file
+* find the hole fp_poly
+* find the shape fl_poly
+* copy the hole's first xy point to also be its last
+* cut out the hole's xy points from the hole fp_poly (and delete the remaining cruft)
+* paste them into the shape's fp_poly just after a neihbor xy line
+* copy the neigbor xy line to also occur after the newly copied in hole block
 
 ## how to use
 ### install python
